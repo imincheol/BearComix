@@ -8,26 +8,30 @@ var app = express();
 
 // Const
 var PATH = {
-    APP_CONFIG: __dirname + "/config/app.config.json" ,
-    USER_CONFIG: __dirname + "/config/user.config.json" ,
-    COMIX_PATH: __dirname + "/comix" ,
+    APP_CONFIG: __dirname + "../config/app.config.json" ,
+    USER_CONFIG: __dirname + "../config/user.config.json" ,
+    COMIX_PATH: __dirname + "../comix" ,
 };
 
 // Load App Config
 var config = {
     port: 8080 ,
     secretKey : "THIS_IS_BEAR_COMIX_SECRET_KEY" ,
-    comix: __dirname + "/comix" ,
+    comix: PATH.COMIX_PATH ,
 };
 try {
-    var appConfigContent = fs.readFileSync(__dirname + PATH.APP_CONFIG, "utf8");
-    config.port = appConfigContent.port;
-    config.secretKey = appConfigContent.secretKey;
-    config.comix = appConfigContent.comix || config.comix;
+    var appConfigJsonText = fs.readFileSync(PATH.APP_CONFIG, "utf8");
+    // console.log(appConfigJsonText);
 
-    console.log("Load complete and apply " + PATH.APP_CONFIG);
+    var appConfigJsonObject = JSON.parse(appConfigJsonText);
+
+    config.port = appConfigJsonObject.port;
+    config.secretKey = appConfigJsonObject.secretKey;
+    config.comix = appConfigJsonObject.comix || config.comix;
+
+    // console.log("Load complete and apply " + PATH.APP_CONFIG);
 }catch(e) {
-    console.log("Load '" + PATH.APP_CONFIG + "' is failed. Instead of use default config");
+    console.log("Load '" + PATH.APP_CONFIG + "' is failed. Instead of use default config",e);
 }
 console.log("AppConfig : ", config);
 
@@ -38,7 +42,6 @@ console.log("AppConfig : ", config);
 
 
 // Static server
-app.use('/comix', express.static(PATH.COMIX_PATH));
 
 // Session
 app.use(session({
@@ -48,6 +51,7 @@ app.use(session({
 }));
 // Session - login check
 app.use(function(req, res, next) {
+    console.log('session check');
     if ( req.session.logined ) {
         next();
     }
@@ -55,6 +59,8 @@ app.use(function(req, res, next) {
         res.redirect('/');
     }
 });
+
+app.use('/comix', express.static(config.comix));
 
 
 // API
